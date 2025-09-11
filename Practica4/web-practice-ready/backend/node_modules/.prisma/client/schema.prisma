@@ -1,0 +1,75 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  registro        String       @id
+  firstName       String
+  lastName        String
+  email           String       @unique
+  passwordHash    String
+  createdAt       DateTime     @default(now())
+  posts           Post[]       @relation("UserPosts")
+  comments        Comment[]    @relation("UserComments")
+  approvedCourses UserCourse[]
+}
+
+model Course {
+  id          Int          @id @default(autoincrement())
+  code        String?      @unique
+  name        String
+  credits     Int          @default(0)
+  posts       Post[]
+  userCourses UserCourse[]
+}
+
+model Professor {
+  id        Int     @id @default(autoincrement())
+  firstName String
+  lastName  String
+  posts     Post[]
+}
+
+model Post {
+  id             Int        @id @default(autoincrement())
+  authorRegistro String
+  author         User       @relation("UserPosts", fields: [authorRegistro], references: [registro])
+  courseId       Int?
+  course         Course?    @relation(fields: [courseId], references: [id])
+  professorId    Int?
+  professor      Professor? @relation(fields: [professorId], references: [id])
+  message        String
+  createdAt      DateTime   @default(now())
+  comments       Comment[]
+}
+
+model Comment {
+  id             Int      @id @default(autoincrement())
+  postId         Int
+  post           Post     @relation(fields: [postId], references: [id])
+  authorRegistro String
+  author         User     @relation("UserComments", fields: [authorRegistro], references: [registro])
+  message        String
+  createdAt      DateTime @default(now())
+}
+
+model UserCourse {
+  id           Int    @id @default(autoincrement())
+  userRegistro String
+  user         User   @relation(fields: [userRegistro], references: [registro])
+  courseId     Int
+  course       Course @relation(fields: [courseId], references: [id])
+  approved     Boolean @default(true)
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  registro  String
+  token     String
+  createdAt DateTime @default(now())
+}
